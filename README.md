@@ -6,6 +6,11 @@ A Simple chat application that uses the Model Context Protocol (MCP) to interact
 
 This application provides a simple and intuitive chat interface for interacting with AI models that support the Model Context Protocol (MCP). It enables calling external tools through the MCP server and displays the results in a user-friendly chat interface.
 
+## Chat UI
+
+<img width="840" alt="image" src="https://github.com/user-attachments/assets/98893ad7-4ffd-477e-a011-2aa02fa7fe12" />
+
+
 ## Architecture
 
 The application is structured as follows:
