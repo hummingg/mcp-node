@@ -1,0 +1,23 @@
+{
+  "name": "mcp-client",
+  "version": "1.0.0",
+  "description": "MCP client and server example",
+  "type": "module",
+  "scripts": {
+    "start-client": "node newClient.js server.js",
+    "start-server": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.14.1",
+    "@modelcontextprotocol/sdk": "^0.1.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.1",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "zod": "^3.22.4"
+  }
+}

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Weather Chat</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        #chat-container { 
+            border: 1px solid #ddd; 
+            height: 500px; 
+            overflow-y: auto; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-message { 
+            background: #3498db; 
+            color: white;
+            padding: 10px 15px; 
+            border-radius: 18px 18px 0 18px; 
+            margin: 10px 0; 
+            text-align: right;
+            max-width: 80%;
+            margin-left: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .assistant-message { 
+            background: #f8f9fa; 
+            padding: 10px 15px; 
+            border-radius: 18px 18px 18px 0; 
+            margin: 10px 0; 
+            max-width: 80%;
+            border-left: 4px solid #2ecc71;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tool-message { 
+            background: #fff8e1; 
+            padding: 10px 15px; 
+            border-radius: 8px; 
+            margin: 10px 0; 
+            font-family: 'Courier New', monospace; 
+            font-size: 0.9em;
+            border-left: 4px solid #f39c12;
+            max-width: 90%;
+            margin-left: 20px;
+        }
+        
+        .tool-message pre { 
+            margin: 8px 0; 
+            white-space: pre-wrap; 
+            overflow-x: auto; 
+            background: rgba(0,0,0,0.03); 
+            padding: 8px; 
+            border-radius: 5px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        #message-input { 
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #message-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        button { 
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #clear-btn {
+            background-color: #e74c3c;
+        }
+        
+        #clear-btn:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <h1>MCP Weather Chat</h1>
+    <div id="chat-container"></div>
+    <div class="input-container">
+        <input type="text" id="message-input" placeholder="Ask about weather...">
+        <button onclick="sendMessage()">Send</button>
+        <button id="clear-btn" onclick="clearChat()">Clear</button>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const messageInput = document.getElementById('message-input');
+
+        window.onload = async function() {
+            try {
+                const response = await fetch('/api/chat/history');
+                const data = await response.json();
+                
+                if (data.chatHistory) {
+                    data.chatHistory.forEach(msg => {
+                        if (msg.role === 'user') {
+                            if (typeof msg.content === 'string' && msg.content.includes('Tool result:')) {
+                                appendToolMessage(msg.content);
+                            } else {
+                                appendUserMessage(msg.content);
+                            }
+                        } else if (msg.role === 'assistant') {
+                            appendAssistantMessage(msg.content);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading chat history:', error);
+            }
+        };
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            appendUserMessage(message);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+                
+                if (data.response) {
+                    for (const item of data.response) {
+                        if (item.type === 'text') {
+                            appendAssistantMessage(item.text);
+                        } else if (item.type === 'tool_call') {
+                            appendToolMessage(`Using tool: ${item.name} with args: ${JSON.stringify(item.args, null, 2)}`);
+                        } else if (item.type === 'tool_result') {
+                            appendToolMessage(`Tool result: ${item.result}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                appendAssistantMessage('Sorry, there was an error processing your request.');
+            }
+        }
+
+        async function clearChat() {
+            try {
+                await fetch('/api/chat/clear', { method: 'POST' });
+                chatContainer.innerHTML = '';
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+            }
+        }
+
+        function appendUserMessage(text) {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'user-message';
+            msgElement.textContent = text;
+            chatContainer.appendChild(msgElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function appendAssistantMessage(text) {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'assistant-message';
+            msgElement.textContent = text;
+            chatContainer.appendChild(msgElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function appendToolMessage(text) {
+            const msgElement = document.createElement('div');
+            msgElement.className = 'tool-message';
+            
+            if (text.startsWith('Tool result:')) {
+                const resultPart = text.substring('Tool result:'.length).trim();
+                try {
+                    const jsonObj = JSON.parse(resultPart);
+                    const formattedJson = JSON.stringify(jsonObj, null, 2);
+                    
+                    msgElement.innerHTML = 'Tool result: <pre>' + formattedJson + '</pre>';
+                } catch (e) {
+                    msgElement.textContent = text;
+                }
+            } else {
+                msgElement.textContent = text;
+            }
+            
+            chatContainer.appendChild(msgElement);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        messageInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
