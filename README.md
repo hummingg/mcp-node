@@ -13,6 +13,9 @@ This application provides a simple and intuitive chat interface for interacting 
 
 ## Architecture
 
+![image](https://github.com/user-attachments/assets/b6338d11-c9d8-403c-bc24-9b7168b1784f)
+
+
 The application is structured as follows:
 
 - **server.js**: Express server that handles HTTP requests and manages the chat sessions.
