@@ -1,14 +1,17 @@
 {
-  "name": "mcp-client",
+  "name": "mcp-node",
   "version": "1.0.0",
-  "description": "MCP client and server example",
+  "description": "Chat application using Model Context Protocol (MCP) with Claude",
   "type": "module",
   "scripts": {
-    "start-client": "node newClient.js server.js",
-    "start-server": "node server.js"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RajeshRenato/mcp-node"
+  },
+  "keywords": ["mcp", "claude", "ai", "chat", "anthropic"],
+  "author": "Rajesh Renato",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.14.1",
