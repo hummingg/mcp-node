@@ -15,3 +15,5 @@ npm-debug.log*
 # IDE files
 .vscode/
 .idea/
+
+.env

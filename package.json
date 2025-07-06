@@ -10,17 +10,25 @@
     "type": "git",
     "url": "https://github.com/RajeshRenato/mcp-node"
   },
-  "keywords": ["mcp", "claude", "ai", "chat", "anthropic"],
+  "keywords": [
+    "mcp",
+    "claude",
+    "ai",
+    "chat",
+    "anthropic"
+  ],
   "author": "Rajesh Renato",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.14.1",
-    "@modelcontextprotocol/sdk": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "axios": "^1.10.0",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "openai": "^5.8.2",
     "zod": "^3.22.4"
   }
 }

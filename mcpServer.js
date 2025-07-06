@@ -109,8 +109,22 @@ server.tool(
     const pointsUrl = `${NWS_API_BASE}/points/${latitude.toFixed(
       4
     )},${longitude.toFixed(4)}`;
-    const pointsData = await makeNWSRequest(pointsUrl);
 
+    // return {
+    //   content: [
+    //     {
+    //       type: "text",
+    //       text: `Forecast for ${latitude}, ${longitude}:\n\n${[0,1,2,3].join(
+    //   "\n"
+    // )}`,
+    //     },
+    //   ],
+    // };
+
+    console.log('pointsUrl', pointsUrl)
+
+    const pointsData = await makeNWSRequest(pointsUrl);
+    console.log('pointsData', pointsData)
     if (!pointsData) {
       return {
         content: [
@@ -123,6 +137,7 @@ server.tool(
     }
 
     const forecastUrl = pointsData.properties?.forecast;
+    console.log('forecastUrl', forecastUrl)
     if (!forecastUrl) {
       return {
         content: [
@@ -135,6 +150,7 @@ server.tool(
     }
 
     const forecastData = await makeNWSRequest(forecastUrl);
+    console.log('forecastData', forecastData)
     if (!forecastData) {
       return {
         content: [
@@ -147,6 +163,7 @@ server.tool(
     }
 
     const periods = forecastData.properties?.periods || [];
+    console.log('periods', periods)
     if (periods.length === 0) {
       return {
         content: [
@@ -169,7 +186,7 @@ server.tool(
         "---",
       ].join("\n")
     );
-
+    console.log('formattedForecast', formattedForecast)
     const forecastText = `Forecast for ${latitude}, ${longitude}:\n\n${formattedForecast.join(
       "\n"
     )}`;
