@@ -1,9 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
+
+const API_KEY = process.env.APILAYER_EXCHANGERATES_DATA_TIMESERIES
 
 const server = new McpServer({
   name: "weather",
@@ -43,6 +48,104 @@ function formatAlert(feature) {
     "---",
   ].join("\n");
 }
+
+function historyRates(startDate, endDate, base = "USD", symbols = "CNY") {
+  var myHeaders = new Headers();
+  // console.log('process.env.APILAYER_EXCHANGERATES_DATA_TIMESERIES', process.env.APILAYER_EXCHANGERATES_DATA_TIMESERIES)
+  myHeaders.append("apikey", process.env.APILAYER_EXCHANGERATES_DATA_TIMESERIES);
+
+  var requestOptions = {
+    method: 'GET',
+    redirect: 'follow',
+    headers: myHeaders
+  };
+
+  return fetch(`https://api.apilayer.com/exchangerates_data/timeseries?start_date=${startDate}&end_date=${endDate}&base=${base}&symbols=${symbols}`, requestOptions)
+    .then(response => response.json())
+    .catch(error => {
+      console.log('error', error);
+      return error;
+    }
+    );
+}
+
+function randomQinghua() {
+  var requestOptions = {
+    method: 'GET',
+  };
+
+  return fetch(`https://api.uomg.com/api/rand.qinghua?format=json`, requestOptions)
+    .then(response => response.json())
+    .catch(error => {
+      console.log('error', error);
+      return error;
+    }
+    );
+}
+
+server.tool(
+  "random-qing-hua",
+  "随机返回一段土味情话",
+  {
+  },
+  async ({ }) => {
+    const res = await randomQinghua();
+    try {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(res, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      // 处理错误，例如返回一个错误消息给调用者
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error fetching historical rates: ${error.message}`,
+          },
+        ],
+      };
+    }
+  }
+);
+
+server.tool(
+  "get-history-rates",
+  "Get historical exchange rates",
+  {
+    startDate: z.string().describe("Start date in YYYY-MM-DD format"),
+    endDate: z.string().describe("End date in YYYY-MM-DD format"),
+    base: z.string().default("USD").describe("Base currency (default: USD)"),
+    symbols: z.string().default("CNY").describe("Comma-separated list of target currencies (default: CNY)"),
+  },
+  async ({ startDate, endDate, base, symbols }) => {
+    const his = await historyRates(startDate, endDate, base, symbols);
+    try {
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify(his, null, 2),
+          },
+        ],
+      };
+    } catch (error) {
+      // 处理错误，例如返回一个错误消息给调用者
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error fetching historical rates: ${error.message}`,
+          },
+        ],
+      };
+    }
+  }
+);
 
 server.tool(
   "get-alerts",
@@ -178,8 +281,7 @@ server.tool(
     const formattedForecast = periods.map((period) =>
       [
         `${period.name || "Unknown"}:`,
-        `Temperature: ${period.temperature || "Unknown"}°${
-          period.temperatureUnit || "F"
+        `Temperature: ${period.temperature || "Unknown"}°${period.temperatureUnit || "F"
         }`,
         `Wind: ${period.windSpeed || "Unknown"} ${period.windDirection || ""}`,
         `${period.shortForecast || "No forecast available"}`,

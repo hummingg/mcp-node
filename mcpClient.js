@@ -49,7 +49,61 @@ class MCPClient {
     // });
     this.mcp = new Client({ name: "mcp-client-api", version: "1.0.0" });
     this.transport = null;
-    this.tools = [];
+    this.tools = [{
+      "type": "function",
+      "function": {
+        "name": "random-qing-hua",
+        "description": "随机返回一段土味情话"
+      }
+    }, {
+      "type": "function",
+      "function": {
+        "name": "get-forecast",
+        "description": "Get weather forecast for a location",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "description": "Latitude of the location",
+            },
+            "longitude": {
+              "type": "number",
+              "description": "longitude of the location",
+            }
+          },
+          "required": ["latitude", "longitude"]
+        }
+      }
+    }, {
+      "type": "function",
+      "function": {
+        "name": "get-history-rates",
+        "description": "Get historical exchange rates",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "startDate": {
+              "type": "string",
+              "description": "Start date in YYYY-MM-DD format",
+            },
+            "endDate": {
+              "type": "string",
+              "description": "End date in YYYY-MM-DD format",
+            },
+            "base": {
+              "type": "string",
+              "description": "Base currency (default: USD)",
+            },
+            "symbols": {
+              "type": "string",
+              "description": "Comma-separated list of target currencies (default: CNY)",
+            },
+          },
+          "required": ["startDate", "endDate", "base", "symbols"]
+        }
+      }
+    }]
     this.chatHistory = [];
   }
 
@@ -112,18 +166,18 @@ class MCPClient {
         throw toolsError;
       }
 
-      this.tools = toolsResult.tools.map((tool) => {
-        return {
-          name: tool.name,
-          description: tool.description,
-          input_schema: tool.inputSchema,
-        };
-      });
+      // this.tools = toolsResult.tools.map((tool) => {
+      //   return {
+      //     name: tool.name,
+      //     description: tool.description,
+      //     input_schema: tool.inputSchema,
+      //   };
+      // });
 
-      console.log(
-        "Connected to server with tools:",
-        this.tools.map(({ name }) => name)
-      );
+      // console.log(
+      //   "Connected to server with tools:",
+      //   this.tools.map(({ name }) => name)
+      // );
 
       return true;
     } catch (e) {
@@ -133,27 +187,7 @@ class MCPClient {
   }
   async processQuery(query) {
     console.log('query', query)
-    const tools = [{
-      "type": "function",
-      "function": {
-        "name": "get-forecast",
-        "description": "Get weather forecast for a location",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "latitude": {
-              "type": "number",
-              "description": "Latitude of the location",
-            },
-            "longitude": {
-              "type": "number",
-              "description": "longitude of the location",
-            }
-          },
-          "required": ["latitude", "longitude"]
-        }
-      }
-    }]
+
     const messages = [
       {
         role: "user",
@@ -171,7 +205,7 @@ class MCPClient {
     let completion = await openai.chat.completions.create({
       model: "deepseek-r1",  // 此处以 deepseek-r1 为例，可按需更换模型名称。 What's the weather in Sacramento?
       messages,
-      tools: tools
+      tools: this.tools
     });
     // console.log('completion', completion)
     let message = completion.choices[0].message
@@ -237,7 +271,7 @@ class MCPClient {
     completion = await openai.chat.completions.create({
       model: "deepseek-r1",  // 此处以 deepseek-r1 为例，可按需更换模型名称。
       messages,
-      tools: tools
+      tools: this.tools
     });
 
     // console.log('completion', completion)
